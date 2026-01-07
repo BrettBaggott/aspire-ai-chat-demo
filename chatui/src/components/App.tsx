@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
 import ChatService from '../services/ChatService';
 import { Message, Chat } from '../types/ChatTypes';
+import { RunnerSettings } from '../types/RunnerSettings';
 import Sidebar from './Sidebar';
 import ChatContainer from './ChatContainer';
 import VirtualizedChatList from './VirtualizedChatList';
@@ -9,6 +10,12 @@ import './App.css';
 import { nanoid } from 'nanoid';          // lightweight id helper (already in many React projects; falls back to simple Date.now() if not installed)
 
 const loadingIndicatorId = 'loading-indicator';
+const runnerSettingsStorageKey = 'kipperbit.runnerSettings';
+const defaultRunnerSettings: RunnerSettings = {
+    workspaceRoot: '',
+    reposRoot: '',
+    mode: 'read-only'
+};
 
 interface ChatParams {
     chatId?: string;
@@ -27,10 +34,31 @@ const App: React.FC = () => {
     const abortControllerRef = useRef<AbortController | null>(null);
     const [shouldAutoScroll, setShouldAutoScroll] = useState<boolean>(true);
     const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+    const [runnerSettings, setRunnerSettings] = useState<RunnerSettings>(() => {
+        const stored = localStorage.getItem(runnerSettingsStorageKey);
+        if (!stored) {
+            return defaultRunnerSettings;
+        }
+
+        try {
+            const parsed = JSON.parse(stored);
+            return {
+                ...defaultRunnerSettings,
+                ...parsed,
+                mode: parsed.mode === 'workspace-write' ? 'workspace-write' : 'read-only'
+            };
+        } catch {
+            return defaultRunnerSettings;
+        }
+    });
     const { chatId } = useParams<ChatParams>();
     const navigate = useNavigate();
 
     const chatService = useMemo(() => ChatService.getInstance('/api/chat'), []);
+
+    useEffect(() => {
+        localStorage.setItem(runnerSettingsStorageKey, JSON.stringify(runnerSettings));
+    }, [runnerSettings]);
 
     useEffect(() => {
         const fetchChats = async () => {
@@ -240,7 +268,7 @@ const App: React.FC = () => {
                 navigate(`/chat/${activeChatId}`);
             }
 
-            await chatService.sendPrompt(activeChatId!, prompt);
+            await chatService.sendPrompt(activeChatId!, prompt, runnerSettings);
             setPrompt('');
         } catch (error) {
             console.error('handleSubmit error:', error);
@@ -295,6 +323,8 @@ const App: React.FC = () => {
                 loadingChats={loadingChats}
                 handleDeleteChat={handleDeleteChat}
                 onNewChat={handleNewChat}
+                runnerSettings={runnerSettings}
+                onRunnerSettingsChange={setRunnerSettings}
             />
             <ChatContainer
                 messages={messages}

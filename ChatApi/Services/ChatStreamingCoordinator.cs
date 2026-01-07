@@ -11,7 +11,7 @@ public class ChatStreamingCoordinator(
 {
     private readonly TimeSpan DefaultStreamItemTimeout = TimeSpan.FromMinutes(1);
 
-    public async Task AddStreamingMessage(Guid conversationId, string text)
+    public async Task AddStreamingMessage(Guid conversationId, string text, RunnerContext? context = null)
     {
         var promptId = Guid.CreateVersion7();
         store.AddMessage(conversationId, new ConversationChatMessage
@@ -41,12 +41,12 @@ public class ChatStreamingCoordinator(
                 using var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
                 tokenSource.CancelAfter(DefaultStreamItemTimeout);
 
-                var context = new RunnerContext(
-                    configuration["KIPPERBIT_SHARED_ROOT"] ?? string.Empty,
-                    configuration["KIPPERBIT_REPOS_ROOT"] ?? string.Empty,
-                    configuration["KIPPERBIT_MODE"] ?? "read-only");
+            var runnerContext = new RunnerContext(
+                ResolveSetting(context?.WorkspaceRoot, "KIPPERBIT_SHARED_ROOT"),
+                ResolveSetting(context?.ReposRoot, "KIPPERBIT_REPOS_ROOT"),
+                ResolveSetting(context?.Mode, "KIPPERBIT_MODE", "read-only"));
 
-                await foreach (var chunk in runner.RunAsync(text, context, tokenSource.Token).WithCancellation(tokenSource.Token))
+                await foreach (var chunk in runner.RunAsync(text, runnerContext, tokenSource.Token).WithCancellation(tokenSource.Token))
                 {
                     tokenSource.CancelAfter(DefaultStreamItemTimeout);
 
@@ -108,5 +108,16 @@ public class ChatStreamingCoordinator(
 
             yield return fragment;
         }
+    }
+
+    private string ResolveSetting(string? value, string configKey, string defaultValue = "")
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        var fromConfig = configuration[configKey];
+        return string.IsNullOrWhiteSpace(fromConfig) ? defaultValue : fromConfig;
     }
 }

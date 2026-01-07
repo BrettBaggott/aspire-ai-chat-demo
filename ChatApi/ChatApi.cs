@@ -43,7 +43,7 @@ public static class ChatExtensions
             }
 
             // Fire and forget
-            await streaming.AddStreamingMessage(id, prompt.Text);
+            await streaming.AddStreamingMessage(id, prompt.Text, prompt.Context);
 
             return Results.Ok();
         });
@@ -60,7 +60,7 @@ public static class ChatExtensions
     }
 }
 
-public record Prompt(string Text);
+public record Prompt(string Text, RunnerContext? Context);
 
 public record NewConversation(string Name);
 

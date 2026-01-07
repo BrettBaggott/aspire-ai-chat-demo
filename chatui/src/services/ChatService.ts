@@ -1,4 +1,5 @@
 import { Chat, Message, MessageFragment } from '../types/ChatTypes';
+import { RunnerSettings } from '../types/RunnerSettings';
 import * as signalR from '@microsoft/signalr';
 import { UnboundedChannel } from '../utils/UnboundedChannel';
 
@@ -165,11 +166,11 @@ class ChatService {
         }
     }
 
-    async sendPrompt(id: string, prompt: string): Promise<void> {
+    async sendPrompt(id: string, prompt: string, context?: RunnerSettings): Promise<void> {
         const response = await fetch(`${this.backendUrl}/${id}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: prompt })
+            body: JSON.stringify({ text: prompt, context })
         });
 
         if (!response.ok) {

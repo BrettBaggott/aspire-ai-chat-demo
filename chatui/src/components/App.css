@@ -157,6 +157,45 @@ body {
     font-size: 14px;
 }
 
+.settings-panel {
+    margin: 8px;
+    padding: 12px;
+    border: 1px solid #2a2b32;
+    border-radius: 8px;
+    background: #1f2024;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.settings-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #b7b8c2;
+}
+
+.settings-label {
+    font-size: 12px;
+    color: #c2c4d0;
+}
+
+.settings-input,
+.settings-select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #353740;
+    background: #2b2c33;
+    color: #ececf1;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.settings-input::placeholder {
+    color: #7b7d88;
+}
+
 /* --- Chat Container --- */
 .chat-container {
     flex: 1;
