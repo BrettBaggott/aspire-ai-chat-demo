@@ -7,6 +7,7 @@ const target = process.env.CHATAPI_HTTPS || process.env.CHATAPI_HTTP;
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: true,
     open: true,
     proxy: {
       '/api': {
