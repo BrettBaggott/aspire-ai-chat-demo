@@ -74,6 +74,14 @@ class ChatService {
         return await response.json();
     }
 
+    async getRunnerDefaults(): Promise<RunnerSettings> {
+        const response = await fetch(`${this.backendUrl}/settings`);
+        if (!response.ok) {
+            throw new Error('Error fetching runner defaults');
+        }
+        return await response.json();
+    }
+
     async createChat(name: string): Promise<Chat> {
         const response = await fetch(`${this.backendUrl}`, {
             method: 'POST',

@@ -6,6 +6,19 @@ public static class ChatExtensions
 
         group.MapGet("/", (IConversationStore store) => store.GetAll());
 
+        group.MapGet("/settings", (IConfiguration config) =>
+        {
+            var workspaceRoot = config["KIPPERBIT_SHARED_ROOT"] ?? string.Empty;
+            var reposRoot = config["KIPPERBIT_REPOS_ROOT"] ?? string.Empty;
+            var mode = config["KIPPERBIT_MODE"];
+            if (string.IsNullOrWhiteSpace(mode))
+            {
+                mode = "read-only";
+            }
+
+            return Results.Ok(new RunnerDefaults(workspaceRoot, reposRoot, mode));
+        });
+
         group.MapGet("/{id}", (Guid id, IConversationStore store) =>
         {
             var conversation = store.Get(id);
@@ -69,3 +82,5 @@ public record ClientMessage(Guid Id, string Sender, string Text);
 public record ClientMessageFragment(Guid Id, string Sender, string Text, Guid FragmentId, bool IsFinal = false);
 
 public record StreamContext(Guid? LastMessageId, Guid? LastFragmentId);
+
+public record RunnerDefaults(string WorkspaceRoot, string ReposRoot, string Mode);

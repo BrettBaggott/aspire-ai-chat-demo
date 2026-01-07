@@ -34,6 +34,7 @@ const App: React.FC = () => {
     const abortControllerRef = useRef<AbortController | null>(null);
     const [shouldAutoScroll, setShouldAutoScroll] = useState<boolean>(true);
     const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+    const [runnerDefaults, setRunnerDefaults] = useState<RunnerSettings | null>(null);
     const [runnerSettings, setRunnerSettings] = useState<RunnerSettings>(() => {
         const stored = localStorage.getItem(runnerSettingsStorageKey);
         if (!stored) {
@@ -59,6 +60,19 @@ const App: React.FC = () => {
     useEffect(() => {
         localStorage.setItem(runnerSettingsStorageKey, JSON.stringify(runnerSettings));
     }, [runnerSettings]);
+
+    useEffect(() => {
+        const fetchRunnerDefaults = async () => {
+            try {
+                const defaults = await chatService.getRunnerDefaults();
+                setRunnerDefaults(defaults);
+            } catch (error) {
+                console.error('Error fetching runner defaults:', error);
+            }
+        };
+
+        fetchRunnerDefaults();
+    }, [chatService]);
 
     useEffect(() => {
         const fetchChats = async () => {
@@ -325,6 +339,7 @@ const App: React.FC = () => {
                 onNewChat={handleNewChat}
                 runnerSettings={runnerSettings}
                 onRunnerSettingsChange={setRunnerSettings}
+                runnerDefaults={runnerDefaults}
             />
             <ChatContainer
                 messages={messages}

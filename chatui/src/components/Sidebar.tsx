@@ -11,6 +11,7 @@ interface SidebarProps {
     onNewChat: () => void;
     runnerSettings: RunnerSettings;
     onRunnerSettingsChange: (settings: RunnerSettings) => void;
+    runnerDefaults: RunnerSettings | null;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -20,7 +21,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     handleDeleteChat,
     onNewChat,
     runnerSettings,
-    onRunnerSettingsChange
+    onRunnerSettingsChange,
+    runnerDefaults
 }) => {
     const navigate = useNavigate();
 
@@ -39,6 +41,16 @@ const Sidebar: React.FC<SidebarProps> = ({
             </button>
             <div className="settings-panel">
                 <div className="settings-title">Runner</div>
+                <div className="settings-hint">
+                    Leave blank to use defaults.
+                </div>
+                <div className="settings-defaults">
+                    Defaults: {runnerDefaults ? (
+                        <>
+                            {runnerDefaults.workspaceRoot || 'unset'} | {runnerDefaults.reposRoot || 'unset'} | {runnerDefaults.mode}
+                        </>
+                    ) : 'loading...'}
+                </div>
                 <label className="settings-label" htmlFor="workspace-root">Workspace root</label>
                 <input
                     id="workspace-root"
