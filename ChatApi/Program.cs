@@ -6,16 +6,12 @@ builder.Services.AddOpenApi();
 
 builder.AddServiceDefaults();
 
-builder.AddChatClient("llm");
-builder.AddRedisClient("cache");
-builder.AddNpgsqlDbContext<AppDbContext>("conversations");
-
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ChatStreamingCoordinator>();
-builder.Services.AddHostedService<EnsureDatabaseCreatedHostedService>();
-
-builder.Services.AddSingleton<IConversationState, RedisConversationState>();
-builder.Services.AddSingleton<ICancellationManager, RedisCancellationManager>();
+builder.Services.AddSingleton<IConversationStore, InMemoryConversationStore>();
+builder.Services.AddSingleton<IConversationState, InMemoryConversationState>();
+builder.Services.AddSingleton<ICancellationManager, InMemoryCancellationManager>();
+builder.Services.AddSingleton<IKipperbitRunner, KipperbitRunner>();
 
 var app = builder.Build();
 

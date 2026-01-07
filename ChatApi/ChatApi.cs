@@ -1,19 +1,14 @@
-using Microsoft.EntityFrameworkCore;
-
 public static class ChatExtensions
 {
     public static void MapChatApi(this WebApplication app)
     {
         var group = app.MapGroup("/api/chat");
 
-        group.MapGet("/", (AppDbContext db) =>
-        {
-            return db.Conversations.ToListAsync();
-        });
+        group.MapGet("/", (IConversationStore store) => store.GetAll());
 
-        group.MapGet("/{id}", async (Guid id, AppDbContext db) =>
+        group.MapGet("/{id}", (Guid id, IConversationStore store) =>
         {
-            var conversation = await db.Conversations.FindAsync(id);
+            var conversation = store.Get(id);
 
             if (conversation is null)
             {
@@ -28,28 +23,25 @@ public static class ChatExtensions
 
         group.MapHub<ChatHub>("/stream", o => o.AllowStatefulReconnects = true);
 
-        group.MapPost("/", async (NewConversation newConversation, AppDbContext db) =>
+        group.MapPost("/", (NewConversation newConversation, IConversationStore store) =>
         {
             if (string.IsNullOrWhiteSpace(newConversation.Name))
             {
                 return Results.BadRequest();
             }
 
-            var conversation = new Conversation
-            {
-                Id = Guid.CreateVersion7(),
-                Name = newConversation.Name,
-                Messages = []
-            };
-
-            db.Conversations.Add(conversation);
-            await db.SaveChangesAsync();
+            var conversation = store.Create(newConversation.Name);
 
             return Results.Created($"/api/chats/{conversation.Id}", conversation);
         });
 
-        group.MapPost("/{id}", async (Guid id, AppDbContext db, Prompt prompt, CancellationToken token, ChatStreamingCoordinator streaming) =>
+        group.MapPost("/{id}", async (Guid id, IConversationStore store, Prompt prompt, ChatStreamingCoordinator streaming) =>
         {
+            if (store.Get(id) is null)
+            {
+                return Results.NotFound();
+            }
+
             // Fire and forget
             await streaming.AddStreamingMessage(id, prompt.Text);
 
@@ -63,20 +55,8 @@ public static class ChatExtensions
             return Results.Ok();
         });
 
-        group.MapDelete("/{id}", async (Guid id, AppDbContext db) =>
-        {
-            var conversation = await db.Conversations.FindAsync(id);
-
-            if (conversation is null)
-            {
-                return Results.NotFound();
-            }
-
-            db.Conversations.Remove(conversation);
-            await db.SaveChangesAsync();
-
-            return Results.Ok();
-        });
+        group.MapDelete("/{id}", (Guid id, IConversationStore store) =>
+            store.Delete(id) ? Results.Ok() : Results.NotFound());
     }
 }
 
