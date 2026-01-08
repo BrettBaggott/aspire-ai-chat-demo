@@ -43,6 +43,7 @@ var cache = builder.AddRedis("cache")
                    .WithRedisInsight();
 
 var chatapi = builder.AddProject<Projects.ChatApi>("chatapi")
+                     .WithEnvironment("ASPNETCORE_URLS", "http://0.0.0.0:7055")
                      .WithReference(model)
                      .WaitFor(model)
                      .WithReference(db)
@@ -66,6 +67,7 @@ var chatapi = builder.AddProject<Projects.ChatApi>("chatapi")
 
 var frontend = builder.AddViteApp("chatuife", "../chatui")
                       .WithReference(chatapi)
+                      .WithEnvironment("CHATAPI_HTTP", "http://localhost:7055")
                       .WithEnvironment("BROWSER", "none")
                       .WithUrl("", "Chat UI");
 
